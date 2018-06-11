@@ -12,22 +12,33 @@ void local_binary(const Mat& src,Mat& retVal){
     int dim=50;
     Mat kernal=Mat::zeros(Size(dim,dim),CV_64FC1);
     kernal=(kernal+1.0)/(dim*dim);
-    
+  
 
     Mat img1,img2,img3,img4;
-    cvtColor(src,img1,CV_BGR2GRAY);
-    filter2D(img1,img2,img1.depth(),kernal);
+    int channel=src.channels();
+    if(channel!=1){
+        cvtColor(src,img1,CV_BGR2GRAY);
+    }else{
+        src.copyTo(img1);
+    }
 
+    filter2D(img1,img2,img1.depth(),kernal);
+    
+
+    FileStorage fs(format("%s/argument.xml",DataPath), FileStorage::READ);
+    float arg1;
+    fs["arg1"] >> arg1;    
     for(int i=0;i<img1.rows;i++){
         for(int j=0;j<img1.cols;j++){
-            if(img1.at<uchar>(i,j)>img2.at<uchar>(i,j)/1.1){
+            if(img1.at<uchar>(i,j)>img2.at<uchar>(i,j)/arg1){
                 img1.at<uchar>(i,j)=255;
             }else{
                 img1.at<uchar>(i,j)=0;
             }
         }
     }
-    retVal=img1;
+    
+    img1.copyTo(retVal);
 }
 
 void Hist_hsv(const Mat& src){
@@ -64,7 +75,11 @@ void Hist_hsv(const Mat& src){
 
 void Hist_gray(const Mat& src){
     Mat img1,img2,img3;
-    cvtColor(src,img1,CV_BGR2GRAY);
+    if(src.channels()==1){
+        src.copyTo(img1);
+    }else{
+        cvtColor(src,img1,CV_BGR2GRAY);        
+    }
     Mat hist;
     int histSize[1]={256};
     int channals[]={0};
@@ -72,9 +87,8 @@ void Hist_gray(const Mat& src){
     const float* ranges[]={range};
 
     calcHist(&img1,1,channals,Mat(),hist,1,histSize,ranges,true,false);
-    smoothing(hist,2);
-    smoothing(hist,2);    
-    ofstream file("/home/sgdd/AI_competition/Data/Mat_gray.csv");
+    string str=format("%s/Mat_gray.csv",DataPath);
+    ofstream file(str);
     file << format(hist, Formatter::FMT_CSV);
     file.close();       
 }
@@ -116,6 +130,9 @@ float mean(float* data,short length, short begin, short end){
 	return sum/(end-begin);
 }
 
+//统计图片的灰度值出现次数。根据测试的结果，文本区域的数目是很少的，基本上不会产生峰值，而纸面
+//的白色区域的数目很大，会产生一个明显的峰值。找到小于这个峰值的第一个谷值，将此作为二值化的门限值。
+//这种方法对于背景灰度相似的图片适用。如果纸面背景有图案或者由于曝光产生不同的色块，这种方法就会产生黑斑。
 void binary(const Mat& src,Mat& retVal){
     Mat img1,img2,img3;
     cvtColor(src,img1,CV_BGR2GRAY);
