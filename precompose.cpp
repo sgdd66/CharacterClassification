@@ -433,6 +433,171 @@ void FindWord(const Mat& src,const Point &upLine, const Point &downLine,Mat &ret
 
 }
 
+void FindWord(const Mat& src,const int &up,const int &down,const float &spinAngle,Mat &retval){
+    int left=0;
+    int right=src.cols;
+    Point2f virtualQuad[4], realQuad[4];
+	Mat warp_matrix(3,3,CV_32FC1,Scalar(0));
+
+
+    float k1=-tan(spinAngle);
+    float b1=up;
+
+
+    float k2=-tan(spinAngle);
+    float b2=down;
+
+
+
+    virtualQuad[0].x=left;
+    virtualQuad[0].y=left*k1+b1;
+    virtualQuad[1].x=right;
+    virtualQuad[1].y=right*k1+b1;
+    
+    virtualQuad[2].x=left;
+    virtualQuad[2].y=left*k2+b2;
+    virtualQuad[3].x=right;
+    virtualQuad[3].y=right*k2+b2;
+
+    float k=( down-up);
+    k=k/(right-left);
+    int height=TextHeight;
+    int width = height/k;
+
+	realQuad[0]=Point2f(0,0);
+	realQuad[1]=Point2f(width,0);
+	realQuad[2]=Point2f(0,height);
+	realQuad[3]=Point2f(width,height);
+
+	warp_matrix=getPerspectiveTransform(virtualQuad,realQuad);
+	warpPerspective(src,retval,warp_matrix,Size(width,height));      
+   
+}
+
+void getHorizontalBoundary(const Mat& src,int &up,int &down,float &spinAngle){
+    //首先对文本可能旋转角度采样，例如文本的角度在【-10,10】度之间，
+    //我们在这个范围内均匀采10个点，我们就有10个旋转角。然后对每一个旋转角，
+    //对每一个图像左侧起点做一条直线，计算这个直线上侧黑色点数。那么只有旋转角与
+    //文本的旋转角度最接近时，上下两条直线之间的距离最短
+
+
+    //选择采样点
+    float maxSpinAngle=5/180.0*PI;
+    int sampleNum=10;
+    float *samples=new float[sampleNum];
+    float step=maxSpinAngle*2/(sampleNum-1);
+    for(int i=0;i<sampleNum;i++){
+        samples[i]=-maxSpinAngle+i*step;
+    }
+
+    //计算积分图
+    int row=src.rows;
+    int col=src.cols;
+    Mat integrogram=Mat::zeros(row,col,CV_32S);
+    int num=0;
+    for(int j=0;j<col;j++){
+        num=0;
+        for(int i=0;i<row;i++){
+            if(src.at<uchar>(i,j)==0){
+                num+=1;
+            }
+            integrogram.at<int>(i,j)=num;
+        }
+    }
+
+    //计算各条直线上方的黑色点数，数组第一维是角度，第二维是图像左侧起点
+    Mat blackPtNum=Mat::zeros(sampleNum,row,CV_32S);
+
+    float k,b;
+    int y;
+    for(int i=0;i<sampleNum;i++){
+        for(int j=0;j<row;j++){
+            k=-tan(samples[i]);
+            b=j;
+            num=0;
+            for(int x=0;x<col;x++){
+                y=k*x+b;
+                if(y<0)
+                    y=0;
+                if(y>=row)
+                    y=row-1;
+                num+=integrogram.at<int>(y,x);
+            }
+            blackPtNum.at<int>(i,j)=num;
+        }
+    }
+
+    //计算梯度的绝对值
+    Mat gradient=Mat::zeros(sampleNum,row,CV_32S);
+
+    for(int i=0;i<sampleNum;i++){
+        for(int j=1;j<row;j++){
+            gradient.at<int>(i,j)=abs(blackPtNum.at<int>(i,j)-blackPtNum.at<int>(i,j-1));
+        }
+    }  
+
+    //计算梯度数据中每一列非零值的最大长度
+    Mat wordWidth=Mat::zeros(sampleNum,1,CV_32S);
+
+    for(int i=0;i<sampleNum;i++){
+        num=0;
+        for(int j=0;j<row;j++){
+            if(gradient.at<int>(i,j)!=0){
+                num+=1;
+                if(num>wordWidth.at<int>(i,0)){
+                    wordWidth.at<int>(i,0)=num;
+                }
+            }else{
+                num=0;
+            }
+        }
+    }
+
+    //选择WordWidth中的最小值
+    int min=wordWidth.at<int>(0,0);
+    int index=0;
+    for(int i=1;i<sampleNum;i++){
+        if(wordWidth.at<int>(i,0)<min){
+            min=wordWidth.at<int>(i,0);
+            index=i;
+        }
+    }
+
+    //确定旋转角度
+    spinAngle=samples[index];
+
+    //确定上边线的左侧起始点，和下边线的左侧起始点
+    up=0;
+    down=0;
+    for(int i=1;i<row;i++){
+        if(gradient.at<int>(index,i-1)==0 && gradient.at<int>(index,i)!=0){
+            up=i;
+        }
+        if(gradient.at<int>(index,i-1)!=0 && gradient.at<int>(index,i)==0){
+            down=i;
+        }
+        if(down-up==wordWidth.at<int>(index,0)){
+            break;
+        }
+
+    }
+
+    // //在图片上绘制上下边线并显示
+    // Point2i pt1,pt2;
+    // pt1=Point(0,up);
+    // pt2=Point(col-1,up-col*tan(spinAngle));
+    // line(src,pt1,pt2,Scalar(100),1);
+    // pt1=Point(0,down);
+    // pt2=Point(col-1,down-col*tan(spinAngle));
+    // line(src,pt1,pt2,Scalar(100),1);
+    // imshow("src",src);
+    // waitKey(0);
+
+    delete [] samples;
+
+
+}
+
 //xml输出
 // FileStorage fs("/home/sgdd/AI_competition/Data/Mat.xml", FileStorage::WRITE);
 // fs << "vocabulary" << hist;
@@ -444,7 +609,7 @@ void FindWord(const Mat& src,const Point &upLine, const Point &downLine,Mat &ret
 // fs["vocabulary"] >> mat_vocabulary;
 
 //csv输出
-// ofstream file("/home/sgdd/AI_competition/Data/Mat.csv");
+// ofstream file("/home/sgdd/Internship/Data/Mat.csv");
 // file << format(hist, Formatter::FMT_CSV);
 // file.close();
 

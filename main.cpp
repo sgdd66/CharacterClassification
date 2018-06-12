@@ -9,6 +9,7 @@ void showOutcome();
 int main(int argc,char** argv){
     // outcome();
     test_signal();
+
     // showOutcome();
 
 
@@ -58,46 +59,31 @@ void test_multiply(){
 //使用一种方法测试
 void test_signal(){
 
-    Mat img,img_binary1,img_binary2,img1,img2,img_binary;
-    Point upLine1,upLine2,upLine;
-    Point downLine1,downLine2,downLine;
+    Mat img,img_binary,img2;
+    int up,down;
+    float spinAngle;
     string str1,str2,str3;
+    char q;
+
     str1=format("%s/file.txt",DataPath);
     ifstream file(str1,ios_base::in);
-    char q;
+
 
     while(getline(file,str2)){
 
         printf(str2.c_str());
         img=imread(str2);
-        local_binary(img,img_binary1);
-        binary(img,img_binary2);
+        local_binary(img,img_binary);
+
         imshow("img",img);
-        imshow("local_binary",img_binary1);
-        // imshow("binary",img_binary2);  
+        imshow("local_binary",img_binary);
+
+
+        getHorizontalBoundary(img_binary,up,down,spinAngle);
+        FindWord(img_binary,up,down,spinAngle,img2);
+        imshow("img2",img2);
         waitKey(0);
 
-        // getHorizontalBoundary(img_binary1,upLine1,downLine1);
-        // getHorizontalBoundary(img_binary2,upLine2,downLine2);
-        // int width1=(downLine1.x-upLine1.x)+(downLine1.y-upLine1.y);
-        // int width2=(downLine2.x-upLine2.x)+(downLine2.y-upLine2.y);
-        // if(width1>width2){
-        //     upLine=upLine2;
-        //     downLine=downLine2;
-        //     img_binary2.copyTo(img_binary);
-        // }else{
-        //     upLine=upLine1;
-        //     downLine=downLine1;
-        //     img_binary1.copyTo(img_binary);
-        // }
-
-
-        // FindWord(img_binary,upLine,downLine,img1);
-    
-
-        // imshow("img",img);
-        // imshow("text",img1);
-        // waitKey(0);    
         
 
     }
