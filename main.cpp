@@ -64,25 +64,32 @@ void test_signal(){
     float spinAngle;
     string str1,str2,str3;
     char q;
+    vector<Mat> imgs;
+    vector<char> words;
+
 
     str1=format("%s/file.txt",DataPath);
     ifstream file(str1,ios_base::in);
 
 
     while(getline(file,str2)){
-
+        imgs.clear();
+        imgs.reserve(11);
         printf(str2.c_str());
         img=imread(str2);
         local_binary(img,img_binary);
 
-        imshow("img",img);
-        imshow("local_binary",img_binary);
+        // imshow("img",img);
+        // imshow("local_binary",img_binary);
 
 
         getHorizontalBoundary(img_binary,up,down,spinAngle);
         FindWord(img_binary,up,down,spinAngle,img2);
-        imshow("img2",img2);
-        waitKey(0);
+        // imshow("img2",img2);
+        // waitKey(0);        
+        split(img2,imgs);
+
+
 
         
 

@@ -461,7 +461,8 @@ void FindWord(const Mat& src,const int &up,const int &down,const float &spinAngl
 
     float k=( down-up);
     k=k/(right-left);
-    int height=TextHeight;
+    // int height=TextHeight;
+    int height=down-up;
     int width = height/k;
 
 	realQuad[0]=Point2f(0,0);
@@ -595,6 +596,87 @@ void getHorizontalBoundary(const Mat& src,int &up,int &down,float &spinAngle){
 
     delete [] samples;
 
+
+}
+
+
+void split(const Mat& src,vector<Mat> &retVal){
+    int wordSum=11;
+    retVal.clear();
+    retVal.reserve(wordSum);
+    int row=src.rows;
+    int col=src.cols;
+    Mat hist=Mat::zeros(col,1,CV_16S);
+    int sum;
+
+    //将文本区域投影在横轴上，统计黑色区域的数目
+    for(int j=0;j<col;j++){
+        sum=0;
+        for(int i=0;i<row;i++){
+            if(src.at<uchar>(i,j)<100){
+                sum+=1;
+            }
+        }
+        hist.at<short>(j,0)=sum;
+    }
+
+    //滤除文字区域中的黑色噪点
+    if(hist.at<short>(0,0)!=0 && hist.at<short>(1,0)==0)
+        hist.at<short>(0,0)=0;
+    if(hist.at<short>(col-1,0)!=0 && hist.at<short>(col-2,0)==0)
+        hist.at<short>(col-1,0)=0;        
+    for(int i=1;i<col-1;i++){
+        if( hist.at<short>(i,0)!=0 && hist.at<short>(i-1,0)==0 && hist.at<short>(i+1,0)==0)
+            hist.at<short>(i,0)==0;
+    }
+
+    ofstream file("/home/sgdd/Internship/Data/Mat.csv");
+    file << format(hist, Formatter::FMT_CSV);
+    file.close();   
+
+    //提取文本可能存在的候选区域
+    vector<Vec3i> scales;
+    scales.reserve(20);
+    Vec3i scale;
+    int begin,end;
+    begin=0;
+    end=0;
+    for(int i=1;i<col;i++){
+        if(hist.at<short>(i,0)==0 && hist.at<short>(i-1,0)!=0){
+            end=i;
+            scale[0]=begin;
+            scale[1]=end;
+            scale[2]=end-begin;
+            scales.push_back(scale);
+        }
+        if(hist.at<short>(i,0)!=0 && hist.at<short>(i-1,0)==0){
+            begin=i;
+        }
+    }
+    //筛选出区域宽度最大的。这种方法要求前期二值化不能产生过大的黑斑。逻辑上应该参考文本的间距，
+    //可以通过计算相邻距离的方差，然后和方差比对来判别那些区域才是字符所在区域。不过先用简单的方法尝试
+    if(scales.size()>wordSum){
+        std::sort(scales.begin(),scales.end(),[](Vec3i a,Vec3i b){return a[2]>b[2];});
+        for(int i=scales.size()-1;i>=wordSum;i--){
+            scales.pop_back();
+        }
+    }
+
+    if(scales.size()<wordSum){
+        printf("the photo is incomplete");
+        return;
+    }
+
+
+    //分割原图片，按顺序存放到retVal中
+    std::sort(scales.begin(),scales.end(),[](Vec3i a,Vec3i b){return a[0]<b[0];});
+    Mat wordImg;
+    Rect roi;
+    for(int i=0;i<wordSum;i++){
+        roi=Rect(scales[i][0],0,scales[i][2],row);
+        wordImg=src(roi);
+        retVal.push_back(wordImg);
+    }
 
 }
 

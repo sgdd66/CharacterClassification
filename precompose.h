@@ -23,3 +23,5 @@ void gradientGray(Mat &src, Mat &mag);
 void FindWord(const Mat& src,const Point &upLine,const Point &downLine,Mat &retval);
 
 void FindWord(const Mat& src,const int &up,const int &down,const float &spinAngle,Mat &retval);
+
+void split(const Mat& src,vector<Mat> &retVal);
