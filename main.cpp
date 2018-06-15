@@ -8,7 +8,7 @@ void showOutcome();
 
 int main(int argc,char** argv){
     // outcome();
-    test_signal();
+    // test_signal();
 
     // showOutcome();
 
@@ -17,7 +17,11 @@ int main(int argc,char** argv){
     // img=imread("/home/sgdd/Internship/Data/165200_6.BMP",IMREAD_COLOR);
     // Hist_gray(img);
     
-
+    //输出训练样本的特征向量
+    char aimChar[12]="0123456789A";
+    for(int i=0;i<11;i++){
+        train1(aimChar[i]);
+    }
 
 }
 
@@ -70,7 +74,7 @@ void test_signal(){
 
     str1=format("%s/file.txt",DataPath);
     ifstream file(str1,ios_base::in);
-
+    int index=0;
 
     while(getline(file,str2)){
         imgs.clear();
@@ -88,12 +92,20 @@ void test_signal(){
         // imshow("img2",img2);
         // waitKey(0);        
         split(img2,imgs);
+        // ImgToSquare(imgs);
+        cutEdge(imgs);
 
+        //存储样本
+        // for(int i=0;i<imgs.size();i++){
+        //     str3=format("%s/label/%d.png",DataPath,index++);
+        //     imwrite(str3,imgs[i]);
+        // }
 
 
         
-
     }
+
+
 }
 
 //提取所有图片的文字区域所用图片

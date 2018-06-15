@@ -25,3 +25,11 @@ void FindWord(const Mat& src,const Point &upLine,const Point &downLine,Mat &retv
 void FindWord(const Mat& src,const int &up,const int &down,const float &spinAngle,Mat &retval);
 
 void split(const Mat& src,vector<Mat> &retVal);
+
+void ImgToSquare(vector<Mat> &wordImg);
+
+void cutEdge(vector<Mat> &wordImg);
+
+void train1(char &aimChar);
+
+void densityFeature(const Mat& img,float* feature);

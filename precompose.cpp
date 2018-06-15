@@ -680,6 +680,233 @@ void split(const Mat& src,vector<Mat> &retVal){
 
 }
 
+//将切割出来的字符扩展为一个正方形，方便特征的提取
+//方法是增加短的边，用255填充，使长短边长相等
+void ImgToSquare(vector<Mat> &wordImg){
+    Mat img,src;
+    int col,row;
+    Rect rect;
+    for(int i=0;i<wordImg.size();i++){
+        col=wordImg[i].cols;
+        row=wordImg[i].rows;
+        // imshow("img1",wordImg[i]);
+        if(col>row){
+            img=Mat(col,col,CV_8UC1,Scalar(255));
+            rect=Rect( 0,(col-row)/2, col,row);
+            wordImg[i].copyTo(img(rect));
+            wordImg[i]=img;
+        }else{
+            img=Mat(row,row,CV_8UC1,Scalar(255));
+            rect=Rect( (row-col)/2, 0, col,row);
+            wordImg[i].copyTo(img(rect));
+            wordImg[i]=img;            
+        }
+        // imshow("img2",wordImg[i]);
+        // waitKey(0);
+    }
+
+}
+//将一张图片的边缘裁掉，重点检查上边线和下边线，左右两侧在上一步的处理中可以保证是紧贴的
+void cutEdge(vector<Mat> &wordImg){
+    int col,row,index1,index2;
+    Rect rect;
+    Mat img;
+
+    for(int n=0;n<wordImg.size();n++){
+        //检测上边线
+        col=wordImg[n].cols;
+        row=wordImg[n].rows;
+        index1=-1;
+        for(int i=0;i<row;i++){
+            for(int j=0;j<col;j++){
+                if(wordImg[n].at<uchar>(i,j)<100){
+                    index1=i;
+                    break;
+                }
+            }
+            if(index1!=-1)
+                break;
+        }
+
+        //检测下边线
+        index2=-1;
+        for(int i=row-1;i>=0;i--){
+            for(int j=0;j<col;j++){
+                if(wordImg[n].at<uchar>(i,j)<100){
+                    index2=i;
+                    break;
+                }
+            }
+            if(index2!=-1)
+                break;
+        }    
+
+        //图片截取    
+        // imshow("src",wordImg[n]);
+        rect=Rect(0,index1,col,index2-index1+1);
+        img=wordImg[n](rect);
+        wordImg[n]=img;
+        // imshow("img",img);
+        // waitKey(0);
+    }
+    
+
+}
+
+//训练方法1，使用密度图，三条横向分割线，三条纵向分割线，产生22维的特征向量
+void train1(char &aimChar){
+    string filePath=format("%s/train/%c/file.txt",DataPath,aimChar);
+    ifstream file(filePath,ios_base::in);
+    if(!file.is_open()){
+        printf("error in open file.txt");
+        return;
+    }
+
+    Mat img;
+    string photoPath;
+    float *feature;
+    vector<float*> features;
+    while(getline(file,photoPath)){
+        feature=new float[22];
+        img=imread(photoPath,IMREAD_GRAYSCALE);
+        densityFeature(img,feature);
+        features.push_back(feature);
+    }
+    file.close();
+
+    int sum=features.size();
+    Mat outcome=Mat::zeros(22,sum,CV_32F);
+    for(int i=0;i<sum;i++){
+        for(int j=0;j<22;j++){
+            outcome.at<float>(j,i)=features[i][j];
+        }
+    }
+
+    filePath=format("%s/DensityFeature/%c.csv",DataPath,aimChar);
+    ofstream ofile(filePath);
+    ofile << format(outcome, Formatter::FMT_CSV);
+    ofile.close();  
+
+    for(int i=0;i<sum;i++)
+        delete [] features[i];
+
+}
+
+void densityFeature(const Mat& img,float* feature){
+    int row=img.rows;
+    int col=img.cols;
+    int colIndex[3];
+    int rowIndex[3];
+    int colStep=col/4;
+    int rowStep=row/4;
+
+    //确定列分割位点
+    int remainder=col%4;
+    switch(remainder){
+        case 0:
+            colIndex[0]=colStep-1;
+            colIndex[1]=colIndex[0]+colStep;
+            colIndex[2]=colIndex[1]+colStep;      
+            break;
+        case 1:
+            colIndex[0]=colStep-1;
+            colIndex[1]=colIndex[0]+colStep;
+            colIndex[2]=colIndex[1]+colStep;      
+            break;    
+        case 2:
+            colIndex[0]=colStep;
+            colIndex[1]=colIndex[0]+colStep;
+            colIndex[2]=colIndex[1]+colStep;      
+            break;         
+        case 3:  
+            colIndex[0]=colStep;
+            colIndex[1]=colIndex[0]+colStep;
+            colIndex[2]=colIndex[1]+colStep;      
+            break;          
+    }
+
+    //确定行分割位点
+    remainder=row%4;
+    switch(remainder){
+        case 0:
+            rowIndex[0]=rowStep-1;
+            rowIndex[1]=rowIndex[0]+rowStep;
+            rowIndex[2]=rowIndex[1]+rowStep;      
+            break;
+        case 1:
+            rowIndex[0]=rowStep-1;
+            rowIndex[1]=rowIndex[0]+rowStep;
+            rowIndex[2]=rowIndex[1]+rowStep;     
+            break;    
+        case 2:
+            rowIndex[0]=rowStep;
+            rowIndex[1]=rowIndex[0]+rowStep;
+            rowIndex[2]=rowIndex[1]+rowStep;      
+            break;         
+        case 3:  
+            rowIndex[0]=rowStep;
+            rowIndex[1]=rowIndex[0]+rowStep;
+            rowIndex[2]=rowIndex[1]+rowStep;    
+            break;          
+    }    
+
+    //计算16个区域的密度
+    float density;
+    int cols[5];
+    cols[0]=-1;
+    cols[1]=colIndex[0];
+    cols[2]=colIndex[1];
+    cols[3]=colIndex[2];
+    cols[4]=col-1;
+
+    int rows[5];
+    rows[0]=-1;
+    rows[1]=rowIndex[0];
+    rows[2]=rowIndex[1];
+    rows[3]=rowIndex[2];
+    rows[4]=row-1;    
+    
+    for(int i=0;i<4;i++){
+        for(int j=0;j<4;j++){
+            density=0;
+            for(int m=rows[i]+1;m<=rows[i+1];m++){
+                for(int n=cols[j]+1;n<=cols[j+1];n++){
+                    if(img.at<uchar>(m,n)<100){
+                        density+=1;
+                    }
+                }
+            }
+            density=density/( (rows[i+1]-rows[i])*(cols[j+1]-cols[j]) );
+            feature[i*4+j]=density;
+            
+        }
+    }
+
+    //计算横纵各三条线的密度
+    for(int i=0;i<3;i++){
+        density=0;
+        for(int j=0;j<col;j++){
+            if(img.at<uchar>(rowIndex[i],j)<100){
+                density+=1;
+            }
+        }
+        density=density/col;
+        feature[16+i]=density;
+    }
+
+    for(int i=0;i<3;i++){
+        density=0;
+        for(int j=0;j<row;j++){
+            if(img.at<uchar>(j,colIndex[i])<100){
+                density+=1;
+            }
+        }
+        density=density/row;
+        feature[19+i]=density;
+    }
+
+}
+
 //xml输出
 // FileStorage fs("/home/sgdd/AI_competition/Data/Mat.xml", FileStorage::WRITE);
 // fs << "vocabulary" << hist;
