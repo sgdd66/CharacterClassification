@@ -33,3 +33,5 @@ void cutEdge(vector<Mat> &wordImg);
 void train1(char &aimChar);
 
 void densityFeature(const Mat& img,float* feature);
+
+void test1(const vector<Mat> &imgs,char* outcome);

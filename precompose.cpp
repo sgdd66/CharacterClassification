@@ -584,15 +584,15 @@ void getHorizontalBoundary(const Mat& src,int &up,int &down,float &spinAngle){
     }
 
     // //在图片上绘制上下边线并显示
-    // Point2i pt1,pt2;
-    // pt1=Point(0,up);
-    // pt2=Point(col-1,up-col*tan(spinAngle));
-    // line(src,pt1,pt2,Scalar(100),1);
-    // pt1=Point(0,down);
-    // pt2=Point(col-1,down-col*tan(spinAngle));
-    // line(src,pt1,pt2,Scalar(100),1);
-    // imshow("src",src);
-    // waitKey(0);
+    Point2i pt1,pt2;
+    pt1=Point(0,up);
+    pt2=Point(col-1,up-col*tan(spinAngle));
+    line(src,pt1,pt2,Scalar(100),1);
+    pt1=Point(0,down);
+    pt2=Point(col-1,down-col*tan(spinAngle));
+    line(src,pt1,pt2,Scalar(100),1);
+    imshow("src",src);
+    waitKey(0);
 
     delete [] samples;
 
@@ -630,9 +630,9 @@ void split(const Mat& src,vector<Mat> &retVal){
             hist.at<short>(i,0)==0;
     }
 
-    ofstream file("/home/sgdd/Internship/Data/Mat.csv");
-    file << format(hist, Formatter::FMT_CSV);
-    file.close();   
+    // ofstream file("/home/sgdd/Internship/Data/Mat.csv");
+    // file << format(hist, Formatter::FMT_CSV);
+    // file.close();   
 
     //提取文本可能存在的候选区域
     vector<Vec3i> scales;
@@ -651,6 +651,13 @@ void split(const Mat& src,vector<Mat> &retVal){
         }
         if(hist.at<short>(i,0)!=0 && hist.at<short>(i-1,0)==0){
             begin=i;
+        }
+        if(i==col-1 && hist.at<short>(i,0)!=0 &&end<begin){
+            end=i;
+            scale[0]=begin;
+            scale[1]=end;
+            scale[2]=end-begin;
+            scales.push_back(scale);            
         }
     }
     //筛选出区域宽度最大的。这种方法要求前期二值化不能产生过大的黑斑。逻辑上应该参考文本的间距，
@@ -904,6 +911,64 @@ void densityFeature(const Mat& img,float* feature){
         density=density/row;
         feature[19+i]=density;
     }
+
+}
+
+//使用密度特征辨识测试样本
+#define CharacterNum 11
+#define DimNum 22
+void test1(const vector<Mat> &imgs,char* outcome){
+    //读取每个标签的特征
+    string filePath=format("%s/DensityFeature/label.txt",DataPath);
+    ifstream file(filePath,ios_base::in);
+    if(!file.is_open()){
+        printf("can't open file:%s");
+    }
+    int row=DimNum;
+    int col=CharacterNum;
+    Mat aims=Mat::zeros(row,col,CV_32F);
+    char labels[CharacterNum+1]="0123456789A";
+    string line;
+    char* nums;
+    char text[300];
+    char splitChar[]=" ";
+    int index=0;
+    while(getline(file,line)){
+        strcpy(text,line.c_str());       
+        nums=strtok(text,splitChar);
+        for(int i=0;i<col;i++){
+            aims.at<float>(index,i)=atof(nums);
+            nums = strtok(NULL, splitChar);
+        }
+        index++;
+    }
+    file.close();
+
+    vector<float> distance;
+    float feature[DimNum];
+    for(int i=0;i<imgs.size();i++){
+        distance.clear();
+        distance.reserve(CharacterNum);
+        densityFeature(imgs[i],feature);     
+        for(int n=0;n<CharacterNum;n++){
+            float tmp=0;
+            for(int d=0;d<DimNum;d++){
+                tmp+=pow(feature[d]-aims.at<float>(d,n),2);
+            }
+            distance.push_back(sqrt(tmp));          
+        }
+        vector<float>::iterator min=std::min_element(distance.begin(),distance.end());  
+        int pos=std::distance(distance.begin(),min);      
+        outcome[i]=labels[pos];
+    }
+    outcome[imgs.size()]='\0';
+
+
+
+
+
+
+    
 
 }
 

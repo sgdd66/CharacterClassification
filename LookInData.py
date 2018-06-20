@@ -22,18 +22,45 @@ def func3():
     charSum=len(aimChar)
     kernals=np.zeros((22,charSum))
     maxDistanceInClass=np.zeros(charSum)
+    meanDistanceInClass=np.zeros(charSum)
+    varDistanceInClass=np.zeros(charSum)
     distanceBetweenClass=np.zeros((charSum,charSum))
+
+    #先把每个类的几何中心找到，找到每个中个体距离自己类中心的最大距离，找到这些类中心之间的最小距离
 
     for i in range(charSum):
         data=np.loadtxt("{0}/{1}.csv".format(Path,aimChar[i]),dtype=np.float,delimiter=",")
         avg=np.mean(data,axis=1,keepdims=True)
         kernals[:,i]=avg[:,0]
         sampleSum=data.shape[1]
-        distance=np.zeros((sampleSum,sampleSum))
-        for
+        distance=[]
+        for j in range(sampleSum):
+            distance.append( np.sqrt( np.sum( (data[:,j]-kernals[:,i])**2 ) ) )
+        maxDistanceInClass[i]=max(distance)
+        meanDistanceInClass[i]=np.mean(distance)
+        varDistanceInClass[i]=np.std(distance)
+    for i in range(charSum-1):
+        for j in range(i+1,charSum):
+            distanceBetweenClass[i,j]=np.sqrt( np.sum( (kernals[:,i]-kernals[:,j])**2 ) )
+            distanceBetweenClass[j,i]=distanceBetweenClass[i,j]
+        distanceBetweenClass[i,i]=100
+    distanceBetweenClass[charSum-1,charSum-1]=100
+    distanceBetweenClass/=2    
 
+    # print(np.round(maxDistanceInClass,2))
+    # print(np.round(distanceBetweenClass,2))
+    # print(max(maxDistanceInClass))
+    # print(np.min(distanceBetweenClass))
+    a=np.row_stack((maxDistanceInClass,meanDistanceInClass,varDistanceInClass,distanceBetweenClass))
+ 
+    np.savetxt("{0}/outcome.csv".format(Path),a)
+    np.savetxt("{0}/label.txt".format(Path),kernals)            
 
     
 
 if __name__=="__main__":
-    func3()
+    func1()
+
+
+
+

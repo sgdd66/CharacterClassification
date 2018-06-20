@@ -8,7 +8,7 @@ void showOutcome();
 
 int main(int argc,char** argv){
     // outcome();
-    // test_signal();
+    test_signal();
 
     // showOutcome();
 
@@ -18,10 +18,10 @@ int main(int argc,char** argv){
     // Hist_gray(img);
     
     //输出训练样本的特征向量
-    char aimChar[12]="0123456789A";
-    for(int i=0;i<11;i++){
-        train1(aimChar[i]);
-    }
+    // char aimChar[12]="0123456789A";
+    // for(int i=0;i<11;i++){
+    //     train1(aimChar[i]);
+    // }
 
 }
 
@@ -72,37 +72,40 @@ void test_signal(){
     vector<char> words;
 
 
-    str1=format("%s/file.txt",DataPath);
+    str1=format("%s/raw2/file.txt",DataPath);
     ifstream file(str1,ios_base::in);
     int index=0;
 
     while(getline(file,str2)){
         imgs.clear();
         imgs.reserve(11);
-        printf(str2.c_str());
+
         img=imread(str2);
         local_binary(img,img_binary);
 
-        // imshow("img",img);
-        // imshow("local_binary",img_binary);
+        imshow("img",img);
+        imshow("local_binary",img_binary);
+        waitKey(0);       
 
+        // getHorizontalBoundary(img_binary,up,down,spinAngle);
+        // FindWord(img_binary,up,down,spinAngle,img2);
+        // // imshow("img2",img2);
+    
+        // split(img2,imgs);
+        // // ImgToSquare(imgs); //将图片扩展为标准大小
+        // cutEdge(imgs); //切割边缘
 
-        getHorizontalBoundary(img_binary,up,down,spinAngle);
-        FindWord(img_binary,up,down,spinAngle,img2);
-        // imshow("img2",img2);
-        // waitKey(0);        
-        split(img2,imgs);
-        // ImgToSquare(imgs);
-        cutEdge(imgs);
-
-        //存储样本
-        // for(int i=0;i<imgs.size();i++){
-        //     str3=format("%s/label/%d.png",DataPath,index++);
-        //     imwrite(str3,imgs[i]);
-        // }
-
-
-        
+        // //存储样本
+        // // for(int i=0;i<imgs.size();i++){
+        // //     str3=format("%s/label/%d.png",DataPath,index++);
+        // //     imwrite(str3,imgs[i]);
+        // // }
+        // char outcome[100];
+        // test1(imgs,outcome);
+        // printf(outcome);  
+        // printf("\n"); 
+        // waitKey(0);            
+    
     }
 
 
