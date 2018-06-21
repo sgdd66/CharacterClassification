@@ -35,3 +35,7 @@ void train1(char &aimChar);
 void densityFeature(const Mat& img,float* feature);
 
 void test1(const vector<Mat> &imgs,char* outcome);
+
+void edgeFilter(Mat &src);
+
+void addRegion(Mat &src,int row,int begin,int end,queue<Vec2s> &regions);

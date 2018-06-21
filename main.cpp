@@ -5,11 +5,11 @@ void test_multiply();
 void test_signal();
 void outcome();
 void showOutcome();
-
+void succeedforLUBU();
 int main(int argc,char** argv){
     // outcome();
     test_signal();
-
+    // succeedforLUBU();
     // showOutcome();
 
 
@@ -63,6 +63,57 @@ void test_multiply(){
 //使用一种方法测试
 void test_signal(){
 
+    Mat img,img_binary,img2;
+    int up,down;
+    float spinAngle;
+    string str1,str2,str3;
+    char q;
+    vector<Mat> imgs;
+    vector<char> words;
+
+
+    str1=format("%s/raw2/file.txt",DataPath);
+    ifstream file(str1,ios_base::in);
+    int index=0;
+
+    while(getline(file,str2)){
+        imgs.clear();
+        imgs.reserve(11);
+
+        img=imread(str2);
+        local_binary(img,img_binary);
+        edgeFilter(img_binary);
+
+        imshow("img",img);
+        imshow("local_binary",img_binary);
+        waitKey(0);       
+
+        // getHorizontalBoundary(img_binary,up,down,spinAngle);
+        // FindWord(img_binary,up,down,spinAngle,img2);
+        // // imshow("img2",img2);
+    
+        // split(img2,imgs);
+        // // ImgToSquare(imgs); //将图片扩展为标准大小
+        // cutEdge(imgs); //切割边缘
+
+        // //存储样本
+        // // for(int i=0;i<imgs.size();i++){
+        // //     str3=format("%s/label/%d.png",DataPath,index++);
+        // //     imwrite(str3,imgs[i]);
+        // // }
+        // char outcome[100];
+        // test1(imgs,outcome);
+        // printf(outcome);  
+        // printf("\n"); 
+        // waitKey(0);            
+    
+    }
+
+
+}
+
+//针对卢布的测试成功版本
+void succeedforLUBU(){
     Mat img,img_binary,img2;
     int up,down;
     float spinAngle;

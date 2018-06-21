@@ -963,13 +963,139 @@ void test1(const vector<Mat> &imgs,char* outcome){
     }
     outcome[imgs.size()]='\0';
 
+}
 
-
-
-
-
+void edgeFilter(Mat &src){
+    imshow("img",src);
+    waitKey(0);
+    int row=src.rows;
+    int col=src.cols;
+    queue<Vec2s> blackRegions;
+    Vec2s region;
+    short begin,end;
     
+    //从下边缘开始扫描
+    begin=0;
+    end=col-1;
+    addRegion(src,row-1,begin,end,blackRegions);
 
+    int pos,num;
+    for(int i=row-2;i>-1;i--){
+        pos=0;
+        num=blackRegions.size();
+        if(num==0){
+            break;
+        }
+        for(int j=0;j<num;j++){
+            region=blackRegions.front();
+            blackRegions.pop();
+            if(region[1]<pos){
+                continue;
+            }else if(region[0]>=pos){
+                begin=0;
+                end=col-1;
+                for(int m=region[0];m>=0;m--){
+                    if(src.at<uchar>(i,m)>100){
+                        begin=m;
+                        break;
+                    }
+                }
+                for(int m=region[1];m<col;m++){
+                    if(src.at<uchar>(i,m)>100){
+                        end=m;
+                        break;
+                    }                    
+                }
+                pos=end;
+                addRegion(src,i,begin,end,blackRegions);
+            }else{
+                begin=pos+1;
+                for(int m=region[1];m<col;m++){
+                    if(src.at<uchar>(i,m)>100){
+                        end=m;
+                        break;
+                    }                    
+                }
+                pos=end;
+                addRegion(src,i,begin,end,blackRegions);                
+            }
+
+        }
+    }
+    //从上边缘开始扫描
+    while(!blackRegions.empty()){
+        blackRegions.pop();
+    }
+    begin=0;
+    end=col-1;
+    addRegion(src,0,begin,end,blackRegions);
+    for(int i=1;i<row;i++){
+        pos=0;
+        num=blackRegions.size();
+        if(num==0){
+            break;
+        }
+        for(int j=0;j<num;j++){
+            region=blackRegions.front();
+            blackRegions.pop();
+            if(region[1]<pos){
+                continue;
+            }else if(region[0]>=pos){
+                begin=0;
+                end=col-1;
+                for(int m=region[0];m>=0;m--){
+                    if(src.at<uchar>(i,m)>100){
+                        begin=m;
+                        break;
+                    }
+                }
+                for(int m=region[1];m<col;m++){
+                    if(src.at<uchar>(i,m)>100){
+                        end=m;
+                        break;
+                    }                    
+                }
+                pos=end;
+                addRegion(src,i,begin,end,blackRegions);
+            }else{
+                begin=pos+1;
+                for(int m=region[1];m<col;m++){
+                    if(src.at<uchar>(i,m)>100){
+                        end=m;
+                        break;
+                    }                    
+                }
+                pos=end;
+                addRegion(src,i,begin,end,blackRegions);                
+            }
+
+        }
+    }
+
+    imshow("src",src);
+    waitKey(0);
+}
+
+//将begin和end中间的黑色区域找出并存放在regions中，同时将该区域置白
+void addRegion(Mat &src,int row,int begin,int end,queue<Vec2s> &regions){
+    Vec2s region;
+    region[0]=begin;
+    region[1]=begin;
+    for(int i=begin+1;i<end+1;i++){
+        if(src.at<uchar>(row,i)>100 && src.at<uchar>(row,i-1)<100){
+            region[1]=i;
+            regions.push(region);
+        }else if(src.at<uchar>(row,i)<100 && src.at<uchar>(row,i-1)>100){
+            region[0]=i;
+        }
+    }
+    if(region[0]>region[1] && region[0]!=regions.back()[0]){
+        region[1]=end;
+        regions.push(region);
+    }
+    for(int i=begin+1;i<end+1;i++){
+        src.at<uchar>(row,i)=255;
+    }
 }
 
 //xml输出
