@@ -11,8 +11,14 @@ void RoubleClassify();
 
 int main(int argc,char** argv){
     // outcome();
-    test();
+    // test();
     // RoubleClassify();
+
+    //输出训练样本的特征向量
+    char aimChar[25]="0123456789ALJKMGHEFCIBDW";
+    for(int i=0;i<25;i++){
+        Dollar::train(aimChar[i]);
+    }
 
 }
 
@@ -31,14 +37,17 @@ void test(){
     str1=format("%s/raw2/file.txt",DataPath);
     ifstream file(str1,ios_base::in);
     int index=0;
+    vector<int> kind;
 
     while(getline(file,str2)){
         imgs.clear();
         imgs.reserve(11);
+        kind.clear();
+        kind.reserve(11);
 
-        // str2="/home/sgdd/Internship/Data/raw2/143101_6.BMP";
+        // str2="/home/sgdd/Internship/Data/raw2/143249_6.BMP";
         img=imread(str2);
-        // imshow("img1",img);
+        imshow("img1",img);
 
         Dollar::binary(img,img_binary);
         // imshow("img2",img_binary);
@@ -47,9 +56,18 @@ void test(){
         // imshow("img3",img_binary);
         // waitKey(0);
 
-        Dollar::split(img_binary,imgs);
-        imshow("img4",img_binary);        
+        Dollar::split(img_binary,imgs,kind);
 
+        //存储样本
+        // for(int i=0;i<imgs.size();i++){
+        //     str3=format("%s/train3/%d.png",DataPath,index++);
+        //     imwrite(str3,imgs[i]);
+        // }
+        imshow("img4",img_binary);   
+        for(int i=0;i<kind.size();i++){
+            printf("%d",kind[i]);
+        }     
+        printf("\n");
         waitKey(0);         
     
     }
@@ -104,8 +122,7 @@ void RoubleClassify(){
         // }
         char outcome[100];
         Rouble::test1(imgs,outcome);
-        printf(outcome);  
-        printf("\n"); 
+        printf("%s\n",outcome);  
         waitKey(0);            
     
     }
@@ -123,7 +140,7 @@ void outcome(){
     ofstream ofile;
 
     while(getline(file,tmp)){
-        printf(tmp.c_str());
+        printf("%s",tmp.c_str());
         printf("\n");
         img=imread(tmp,IMREAD_COLOR);
         AI::local_binary(img,img_binary1);

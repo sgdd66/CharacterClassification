@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 def func1():
     #折线图
     while(1):
-        tmp = np.loadtxt("/home/sgdd/Internship/Data/Mat1.csv", dtype=np.int32, delimiter="\t")
+        tmp = np.loadtxt("/home/sgdd/Internship/Data/Mat.csv", dtype=np.int32, delimiter="\t")
         print(tmp.shape)
         plt.plot(tmp)
         plt.show()
@@ -19,9 +19,9 @@ def func2():
 def func3():
     #处理特征向量
     Path="/home/sgdd/Internship/Data/DensityFeature"
-    aimChar=['0','1','2','3','4','5','6','7','8','9','A']
+    aimChar=['0','1','2','3','4','5','6','7','8','9','A','L','J','K','M','G','H','E','F','C','I','B','D','W']
     charSum=len(aimChar)
-    kernals=np.zeros((22,charSum))
+    kernals=np.zeros((17,charSum))
     maxDistanceInClass=np.zeros(charSum)
     meanDistanceInClass=np.zeros(charSum)
     varDistanceInClass=np.zeros(charSum)
@@ -55,12 +55,41 @@ def func3():
     a=np.row_stack((maxDistanceInClass,meanDistanceInClass,varDistanceInClass,distanceBetweenClass))
  
     np.savetxt("{0}/outcome.csv".format(Path),a)
-    np.savetxt("{0}/label.txt".format(Path),kernals)            
+    np.savetxt("{0}/label.txt".format(Path),kernals)   
 
+def func4():
+    #处理特征向量
+    Path="/home/sgdd/Internship/Data/DensityFeature"
+    aimChar=['0','1','2','3','4','5','6','7','8','9']
+    charSum=len(aimChar)
+    kernals=np.zeros((17,charSum))
+
+    #先把每个类的几何中心找到，找到每个中个体距离自己类中心的最大距离，找到这些类中心之间的最小距离
+
+    for i in range(charSum):
+        data=np.loadtxt("{0}/{1}.csv".format(Path,aimChar[i]),dtype=np.float,delimiter=",")
+        data=data.reshape((17,-1))
+        avg=np.mean(data,axis=1,keepdims=True)
+        kernals[:,i]=avg[:,0]
+ 
+    np.savetxt("{0}/label_Number_Dollar.txt".format(Path),kernals)               
     
+    aimChar=['A','L','J','K','M','G','H','E','F','C','I','B','D','W']
+    charSum=len(aimChar)
+    kernals=np.zeros((17,charSum))
+
+    #先把每个类的几何中心找到，找到每个中个体距离自己类中心的最大距离，找到这些类中心之间的最小距离
+
+    for i in range(charSum):
+        data=np.loadtxt("{0}/{1}.csv".format(Path,aimChar[i]),dtype=np.float,delimiter=",")
+        data=data.reshape((17,-1))
+        avg=np.mean(data,axis=1,keepdims=True)
+        kernals[:,i]=avg[:,0]
+ 
+    np.savetxt("{0}/label_character_Dollar.txt".format(Path),kernals)             
 
 if __name__=="__main__":
-    func1()
+    func4()
 
 
 

@@ -187,15 +187,15 @@ void Rouble::getHorizontalBoundary(const Mat& src,int &up,int &down,float &spinA
     }
 
     // //在图片上绘制上下边线并显示
-    Point2i pt1,pt2;
-    pt1=Point(0,up);
-    pt2=Point(col-1,up-col*tan(spinAngle));
-    line(src,pt1,pt2,Scalar(100),1);
-    pt1=Point(0,down);
-    pt2=Point(col-1,down-col*tan(spinAngle));
-    line(src,pt1,pt2,Scalar(100),1);
-    imshow("src",src);
-    waitKey(0);
+    // Point2i pt1,pt2;
+    // pt1=Point(0,up);
+    // pt2=Point(col-1,up-col*tan(spinAngle));
+    // line(src,pt1,pt2,Scalar(100),1);
+    // pt1=Point(0,down);
+    // pt2=Point(col-1,down-col*tan(spinAngle));
+    // line(src,pt1,pt2,Scalar(100),1);
+    // imshow("src",src);
+    // waitKey(0);
 
     delete [] samples;
 
@@ -520,10 +520,10 @@ void Rouble::densityFeature(const Mat& img,float* feature){
 //使用密度特征辨识测试样本
 void Rouble::test1(const vector<Mat> &imgs,char* outcome){
     //读取每个标签的特征
-    string filePath=format("%s/DensityFeature/label.txt",DataPath);
+    string filePath=format("%s/DensityFeature/Rouble_label.txt",DataPath);
     ifstream file(filePath,ios_base::in);
     if(!file.is_open()){
-        printf("can't open file:%s");
+        printf("can't open file");
     }
     int row=DimNum;
     int col=CharacterNum;

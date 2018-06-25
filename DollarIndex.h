@@ -8,6 +8,10 @@ namespace Dollar{
 
     void addRegion(Mat &src,int row,int begin,int end,queue<Vec2s> &regions);    
 
-    void split(Mat &src,vector<Mat> &retVal);
+    void split(Mat &src,vector<Mat> &retVal,vector<int> &kind);
+
+    void densityFeature(const Mat& img,float* feature);
+
+    void train(char &aimChar);
 
 }
