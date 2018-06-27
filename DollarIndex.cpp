@@ -518,6 +518,7 @@ void Dollar::split(Mat &src,vector<Mat> &retVal,vector<int> &kind){
     }
 
     //数字和字母一起识别可行性不高，建议将数字和字母分开。
+    //0表示字母，1表示数字，2表示特殊符号
     if(regions[1][0]-regions[0][1]>regions[2][0]-regions[1][1]){
         kind.push_back(0);
     }else{
@@ -677,6 +678,100 @@ void Dollar::densityFeature(const Mat& img,float* feature){
         }
         density=density/row;
         feature[15+i]=density;
+    }
+
+}
+
+
+void Dollar::test(const vector<Mat> &imgs,const vector<int> kind,char* outcome){
+    //读取每个标签的特征
+    string filePath=format("%s/DensityFeature/Dollar_number.txt",DataPath);
+    ifstream file(filePath,ios_base::in);
+    if(!file.is_open()){
+        printf("can't open file:%s\n",filePath.c_str());
+        return;
+    }
+
+    Mat aim_num=Mat::zeros(DimNum,NumNum,CV_32F);
+    Mat aim_char=Mat::zeros(DimNum,CharNum,CV_32F);
+    char labels_num[NumNum+1]="0123456789";
+    char labels_char[CharNum+1]="ALJKMGHEFCIBDW";
+
+    string line;
+    char* nums;
+    char text[500];
+    char splitChar[]=" ";
+    int index=0;
+    while(getline(file,line)){
+        strcpy(text,line.c_str());       
+        nums=strtok(text,splitChar);
+        for(int i=0;i<NumNum;i++){
+            aim_num.at<float>(index,i)=atof(nums);
+            nums = strtok(NULL, splitChar);
+        }
+        index++;
+    }
+    file.close();
+
+    filePath=format("%s/DensityFeature/Dollar_character.txt",DataPath);
+    file.open(filePath,ios_base::in);
+
+    if(!file.is_open()){
+        printf("can't open file:%s\n",filePath.c_str());
+        return;
+    }   
+
+    index=0;
+    while(getline(file,line)){
+        strcpy(text,line.c_str());       
+        nums=strtok(text,splitChar);
+        for(int i=0;i<CharNum;i++){
+            aim_char.at<float>(index,i)=atof(nums);
+            nums = strtok(NULL, splitChar);
+        }
+        index++;
+    }
+    file.close();    
+
+    vector<float> distance;
+    float feature[DimNum];
+    for(int i=0;i<imgs.size();i++){
+        if(kind[i]==0){     //字母
+            distance.clear();
+            distance.reserve(CharNum);
+            densityFeature(imgs[i],feature);     
+            for(int n=0;n<CharNum;n++){
+                float tmp=0;
+                for(int d=0;d<DimNum;d++){
+                    tmp+=pow(feature[d]-aim_char.at<float>(d,n),2);
+                }
+                distance.push_back(sqrt(tmp));          
+            }
+            vector<float>::iterator min=std::min_element(distance.begin(),distance.end());  
+            int pos=std::distance(distance.begin(),min);      
+            outcome[i]=labels_char[pos];
+        }else if(kind[i]==1){   //数字
+            distance.clear();
+            distance.reserve(NumNum);
+            densityFeature(imgs[i],feature);     
+            for(int n=0;n<NumNum;n++){
+                float tmp=0;
+                for(int d=0;d<DimNum;d++){
+                    tmp+=pow(feature[d]-aim_num.at<float>(d,n),2);
+                }
+                distance.push_back(sqrt(tmp));          
+            }
+            vector<float>::iterator min=std::min_element(distance.begin(),distance.end());  
+            int pos=std::distance(distance.begin(),min);      
+            outcome[i]=labels_num[pos];
+        }
+
+    }
+    if(imgs.size()<kind.size()){
+        outcome[imgs.size()]='*';
+        outcome[imgs.size()+1]='\0';
+    }else{
+        outcome[imgs.size()]='\0';
     }
 
 }

@@ -18,5 +18,8 @@ namespace Rouble{
     void test1(const vector<Mat> &imgs,char* outcome);
 
     void binary(const Mat& src,Mat& retVal);
+
+    const int CharacterNum = 11;
+    const int DimNum = 22;
     
 }

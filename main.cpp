@@ -11,21 +11,12 @@ void RoubleClassify();
 
 int main(int argc,char** argv){
     // outcome();
-    // test();
+    test();
     // RoubleClassify();
-
-    //输出训练样本的特征向量
-    char aimChar[25]="0123456789ALJKMGHEFCIBDW";
-    for(int i=0;i<25;i++){
-        Dollar::train(aimChar[i]);
-    }
-
 }
 
 //测试
 void test(){
-
-
     Mat img,img_binary,img2;
     int up,down;
     float spinAngle;
@@ -33,6 +24,7 @@ void test(){
     char q;
     vector<Mat> imgs;
     vector<char> words;
+    char outcome[100];
 
     str1=format("%s/raw2/file.txt",DataPath);
     ifstream file(str1,ios_base::in);
@@ -63,12 +55,16 @@ void test(){
         //     str3=format("%s/train3/%d.png",DataPath,index++);
         //     imwrite(str3,imgs[i]);
         // }
-        imshow("img4",img_binary);   
-        for(int i=0;i<kind.size();i++){
-            printf("%d",kind[i]);
-        }     
-        printf("\n");
-        waitKey(0);         
+
+        //输出训练样本的特征向量
+        // char aimChar[25]="0123456789ALJKMGHEFCIBDW";
+        // for(int i=0;i<25;i++){
+        //     Dollar::train(aimChar[i]);
+        // }
+
+        Dollar::test(imgs,kind,outcome);
+        printf("%s\n",outcome);  
+        waitKey(0);        
     
     }
 

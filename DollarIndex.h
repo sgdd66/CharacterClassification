@@ -14,4 +14,10 @@ namespace Dollar{
 
     void train(char &aimChar);
 
+    void test(const vector<Mat> &imgs,const vector<int> kind,char* outcome);
+
+    const int DimNum=17;
+    const int CharNum=14;
+    const int NumNum=10;
+
 }

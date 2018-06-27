@@ -20,9 +20,6 @@ using namespace std;
 #define WorkShopPath "/home/sgdd/Internship"
 #define DataPath "/home/sgdd/Internship/Data"
 
-#define CharacterNum 11
-#define DimNum 22
-
 #endif
 
 //xml输出

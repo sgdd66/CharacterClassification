@@ -72,7 +72,7 @@ def func4():
         avg=np.mean(data,axis=1,keepdims=True)
         kernals[:,i]=avg[:,0]
  
-    np.savetxt("{0}/label_Number_Dollar.txt".format(Path),kernals)               
+    np.savetxt("{0}/Dollar_number.txt".format(Path),kernals)               
     
     aimChar=['A','L','J','K','M','G','H','E','F','C','I','B','D','W']
     charSum=len(aimChar)
@@ -86,7 +86,7 @@ def func4():
         avg=np.mean(data,axis=1,keepdims=True)
         kernals[:,i]=avg[:,0]
  
-    np.savetxt("{0}/label_character_Dollar.txt".format(Path),kernals)             
+    np.savetxt("{0}/Dollar_character.txt".format(Path),kernals)             
 
 if __name__=="__main__":
     func4()
