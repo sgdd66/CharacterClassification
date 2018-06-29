@@ -26,20 +26,20 @@ void readBMP(const char* filePath, IMG* img){
     BITMAPINFOHEADER bih;
 	if (NULL == (file = fopen(filePath, "rb")))
 	{
-   		return 0;
+   		return;
 	}
 	printf("read %s\n", filePath);
 	fread(&bfh, sizeof(U16), 7, file);
 	if (bfh[0] != (U16)(((U16)'B')|('M'<<8)))
 	{
    		fclose(file);
-   		return 0;
+   		return;
 	}
 	fread(&bih, sizeof(BITMAPINFOHEADER), 1, file);
 	if (bih.biBitCount < 24)
 	{
    		fclose(file);
-   		return 0;
+   		return;
 	}
 	dpixeladd = bih.biBitCount / 8;
 	LineByteWidth = bih.biWidth * (dpixeladd);
@@ -59,14 +59,13 @@ void readBMP(const char* filePath, IMG* img){
 	U8 *ptr;
     img->pImg=(U8**)malloc(sizeof(U8*) * img->row);
     for(int i=0;i<img->row;i++){
-        img->pImg=(U8*)malloc(sizeof(U8) * img->col);
+        img->pImg[i]=(U8*)malloc(sizeof(U8) * img->col);
     }
 
     u8 b,g,r;
-    u8* ptr;
     for(int i=0;i<img->row;i++){
         for(int j=0;j<img->col;j++){
-            ptr = Buffer + j * dpixeladd + i * LineByteWidth;
+            ptr = Buffer + j * dpixeladd + (img->row-1-i) * LineByteWidth;
             b = *ptr;
             g = *(ptr + 1);
             r = *(ptr + 2);            
@@ -78,7 +77,22 @@ void readBMP(const char* filePath, IMG* img){
 }
 
 void writeTXT(const char* filePath, IMG *img){
-
+    FILE *file;
+    file=fopen(filePath,"w");
+	char text[10];
+    if(file==NULL){
+		printf("error in opening file:%s",filePath);
+		return;
+	}
+	for(int i=0;i<img->row;i++){
+		for(int j=0;j<img->col-1;j++){
+			sprintf(text,"%d ",img->pImg[i][j]);
+			fwrite(text,sizeof(char),strlen(text),file);
+		}
+		sprintf(text,"%d\n",img->pImg[i][img->col-1]);
+		fwrite(text,sizeof(char),strlen(text),file);		
+	}
+	fclose(file);
 }
  
 int test(void)
@@ -95,8 +109,8 @@ int test(void)
    		printf("failure to read file %s", szfilename);
   	 	return 1;
 	}
-	printf("Width: %ld\n", bih.biWidth);
-	printf("Height: %ld\n", bih.biHeight);
+	printf("Width: %d\n", bih.biWidth);
+	printf("Height: %d\n", bih.biHeight);
 	printf("BitCount: %d\n\n", (int)bih.biBitCount);
 	while(1)
 	{
@@ -106,7 +120,7 @@ int test(void)
     			break;
    		printf("input the Y:");
    		scanf("%d", &y);
-   		if (GetDIBColor(x, y, &r, &g, &b) == 1)
+   		if (GetDIBColor(x, y, &r, &g, &b,&bih,Buffer,&LineByteWidth) == 1)
     			printf("(%d, %d): r:%d, g:%d, b:%d\n", x, y, (int)r, (int)g, (int)b);
    		else
    	 		printf("input error.\n");
@@ -138,9 +152,9 @@ int ReadBmp(const char* szFileName,BITMAPINFOHEADER *bih,U8* Buffer,long *LineBy
    		return 0;
 	}
 	dpixeladd = bih->biBitCount / 8;
-	LineByteWidth = bih->biWidth * (dpixeladd);
+	*LineByteWidth = bih->biWidth * (dpixeladd);
 	if ((*LineByteWidth % 4) != 0)
-	LineByteWidth += 4 - (*LineByteWidth % 4);
+	*LineByteWidth += 4 - (*LineByteWidth % 4);
 	if ((Buffer = (U8*)malloc(sizeof(U8)* *LineByteWidth * bih->biHeight)) != NULL)
 	{
    		fread(Buffer, *LineByteWidth * bih->biHeight, 1, file);

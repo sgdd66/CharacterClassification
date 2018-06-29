@@ -1,11 +1,14 @@
 #include"stdafx.h"
-#define   __FILENAME  "./img/in.jpg"  //this is the default image,if no input filename,the image will be used
 
 #include "OCR_Dollar.h"
+#include "BMP.h"
 
 int main(int argn,char** argc){
-    int a;
-    test();
+    IMG img;
+    readBMP("/home/sgdd/Internship/Data/raw2/143027_6.BMP",&img);
+    binary(&img);
+    edgeFilter(&img);
+    writeTXT("/home/sgdd/Internship/Data/mat.txt",&img);
 }
 
 

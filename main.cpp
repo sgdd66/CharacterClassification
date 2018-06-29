@@ -8,6 +8,7 @@
 void test();
 void outcome();
 void RoubleClassify();
+void DollarClassify();
 
 int main(int argc,char** argv){
     // outcome();
@@ -37,12 +38,70 @@ void test(){
         kind.clear();
         kind.reserve(11);
 
-        // str2="/home/sgdd/Internship/Data/raw2/143249_6.BMP";
+        // str2="/home/sgdd/Internship/Data/raw1/165151_6.BMP";
+        img=imread(str2);
+        imshow("img1",img);
+
+        Dollar::binary(img,img_binary);
+        imshow("img2",img_binary);
+        // waitKey(0);
+
+        Dollar::edgeFilter(img_binary);
+        imshow("img3",img_binary);
+        // waitKey(0);
+
+        Dollar::split(img_binary,imgs,kind);
+
+        //存储样本
+        // for(int i=0;i<imgs.size();i++){
+        //     str3=format("%s/train3/%d.png",DataPath,index++);
+        //     imwrite(str3,imgs[i]);
+        // }
+
+        //输出训练样本的特征向量
+        // char aimChar[25]="0123456789ALJKMGHEFCIBDW";
+        // for(int i=0;i<25;i++){
+        //     Dollar::train(aimChar[i]);
+        // }
+
+        Dollar::test(imgs,kind,outcome);
+        printf("%s\n",outcome);  
+        waitKey(0);        
+    
+    }
+
+
+}
+
+//美元测试成功版本
+void DollarClassify(){
+    Mat img,img_binary,img2;
+    int up,down;
+    float spinAngle;
+    string str1,str2,str3;
+    char q;
+    vector<Mat> imgs;
+    vector<char> words;
+    char outcome[100];
+
+    str1=format("%s/raw2/file.txt",DataPath);
+    ifstream file(str1,ios_base::in);
+    int index=0;
+    vector<int> kind;
+
+    while(getline(file,str2)){
+        imgs.clear();
+        imgs.reserve(11);
+        kind.clear();
+        kind.reserve(11);
+
+        // str2="/home/sgdd/Internship/Data/raw1/165151_6.BMP";
         img=imread(str2);
         imshow("img1",img);
 
         Dollar::binary(img,img_binary);
         // imshow("img2",img_binary);
+        // waitKey(0);
 
         Dollar::edgeFilter(img_binary);
         // imshow("img3",img_binary);
@@ -70,6 +129,7 @@ void test(){
 
 
 }
+
 
 //卢布测试成功版本
 void RoubleClassify(){

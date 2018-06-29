@@ -19,10 +19,27 @@
 #ifndef __OCR_Dollar_h__
 #define __OCR_Dollar_h__
 #include "stdafx.h"
+#include "DataStructure.h"
+//使用局部二值化的方法
+void binary(IMG *img);
 
-void readImg(const char* filePath, IMG* img);
-int ReadBmp(const char* szFileName);
-int GetDIBColor(int X, int Y, U8 *r, U8 *g, U8 *b);
-int test(void);
+//将所有与边缘相贴的图案筛选掉
+void edgeFilter(IMG *img);
+
+//将begin和end中间的黑色区域找出并存放在regions中，同时将该区域置白
+void addRegion(IMG *src,int row,int begin,int end,Chain *regions);    
+
+void split(IMG *src,vector<Mat> &retVal,vector<int> &kind);
+
+// void densityFeature(const Mat& img,float* feature);
+
+
+
+// void test(const vector<Mat> &imgs,const vector<int> kind,char* outcome);
+
+// const int DimNum=17;
+// const int CharNum=14;
+// const int NumNum=10;
+
 
 #endif

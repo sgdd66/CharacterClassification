@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <stdio.h>
+#include <string.h>
 
 //自定义类型名
 typedef unsigned char   U8;
@@ -41,5 +42,6 @@ typedef struct {
     int row;
     int col;
 } IMG;
+
 
 #endif

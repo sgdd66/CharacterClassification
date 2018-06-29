@@ -11,7 +11,7 @@ def func1():
 
 def func2():
     #云图
-    tmp = np.loadtxt("/home/sgdd/Internship/Data/Mat.csv",dtype=np.int32,delimiter=",")
+    tmp = np.loadtxt("/home/sgdd/Internship/Data/mat.txt",dtype=np.int32,delimiter=" ")
     print(tmp.shape)
     plt.imshow(tmp)
     plt.show()
@@ -89,7 +89,7 @@ def func4():
     np.savetxt("{0}/Dollar_character.txt".format(Path),kernals)             
 
 if __name__=="__main__":
-    func4()
+    func2()
 
 
 

@@ -152,8 +152,14 @@ void Dollar::edgeFilter(Mat &src){
 //将begin和end中间的黑色区域找出并存放在regions中，同时将该区域置白
 void Dollar::addRegion(Mat &src,int row,int begin,int end,queue<Vec2s> &regions){
     Vec2s region;
-    region[0]=begin;
-    region[1]=begin;
+    if(src.at<uchar>(row,begin)>100){
+        region[0]=-1;
+        region[1]=-1;
+    }else{
+        region[0]=begin;
+        region[1]=-1;        
+    }
+
     for(int i=begin+1;i<end+1;i++){
         if(src.at<uchar>(row,i)>100 && src.at<uchar>(row,i-1)<100){
             region[1]=i;
@@ -162,7 +168,7 @@ void Dollar::addRegion(Mat &src,int row,int begin,int end,queue<Vec2s> &regions)
             region[0]=i;
         }
     }
-    if(region[0]>region[1] && (region[0]!=regions.back()[0] || regions.empty()) ){
+    if(region[0]>region[1]){
         region[1]=end;
         regions.push(region);
     }
