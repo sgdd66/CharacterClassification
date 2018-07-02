@@ -38,7 +38,7 @@ void test(){
         kind.clear();
         kind.reserve(11);
 
-        // str2="/home/sgdd/Internship/Data/raw1/165151_6.BMP";
+        str2="/home/sgdd/Internship/Data/raw2/143027_6.BMP";
         img=imread(str2);
         imshow("img1",img);
 

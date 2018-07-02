@@ -18,10 +18,11 @@
 #ifndef __DATASTRUCTURE_H__
 #define __DATASTRUCTURE_H__
 #include "stdafx.h"
+#define NodeDim 4
 typedef struct Node{
     struct Node *next;
     struct Node *last;
-    int data[3];
+    int data[NodeDim];
 } Node;
 
 typedef struct Chain{
@@ -29,6 +30,8 @@ typedef struct Chain{
     struct Node *back;
     int size;
 } Chain;
+
+
 
 
 // typedef struct Node_2s{
@@ -54,4 +57,13 @@ typedef struct Chain{
 void push(Chain *chain,Node *node);
 Node* pop_back(Chain *chain);
 Node* pop_front(Chain *chain);
+Node* at(Chain *chain, int pos);
+void initIMG(IMG* img,int row,int col);
+void freeIMG(IMG* img);
+//从大到小排序
+void sort(Chain* chain,int index, bool isAsc);
+//只交换数据
+void swap(Node* node1,Node* node2);
+//输出链表
+void writeChain(const char* filePath,Chain* chain);
 #endif

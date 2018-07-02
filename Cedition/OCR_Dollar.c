@@ -222,3 +222,529 @@ void addRegion(IMG *src,int row,int begin,int end,Chain *regions){
     }
 }
 
+//考虑到横向和纵向切割都需要积分图，所以把两个功能放在一个函数中
+//kind=0表示字母A-Z kind=1表示数字0-9 kind=2表示星形符号
+void split(IMG *src,Chain* retVal,int *kind){
+    retVal->size=0;
+    U32** integrogram;
+    integrogram=(U32**)malloc(sizeof(U32*)*src->row);
+    for(int i=0;i<src->row;i++){
+        integrogram[i]=(U32*)malloc(sizeof(U32)*src->col);
+    }
+
+    if(src->pImg[0][0]<100){
+        integrogram[0][0]=1;
+    }else{
+        integrogram[0][0]=0;
+    }
+
+    for(int i=1;i<src->col;i++){
+        if(src->pImg[0][i-1]<100){
+            integrogram[0][i]=integrogram[0][i-1]+1;
+        }else{
+            integrogram[0][i]=integrogram[0][i-1];
+        }        
+    }
+
+    for(int j=1;j<src->row;j++){
+        if(src->pImg[j][0]<100){
+            integrogram[j][0]=integrogram[j-1][0]+1;
+        }else{
+            integrogram[j][0]=integrogram[j-1][0];
+        }        
+    }        
+
+    for(int i=1;i<src->row;i++){
+        for(int j=1;j<src->col;j++){
+            if(src->pImg[i][j]<100){
+                integrogram[i][j]=integrogram[i-1][j]+
+                                    integrogram[i][j-1]-
+                                    integrogram[i-1][j-1]+1;                
+            }else{
+                integrogram[i][j]=integrogram[i-1][j]+
+                                    integrogram[i][j-1]-
+                                    integrogram[i-1][j-1];                  
+            }
+
+        }
+    }
+
+    //计算行投影,这里使用IMG只支持U8类型，当数据大于255时会发生错误。不过当前的图片一般在255之下，所以可以接受。
+    int *row_pro,*col_pro;
+    row_pro=(int*)malloc(sizeof(int)*src->row);
+    col_pro=(int*)malloc(sizeof(int)*src->col);
+    memset(row_pro,0,sizeof(int)*src->row);
+    memset(col_pro,0,sizeof(int)*src->col);
+
+    row_pro[0]=integrogram[0][src->col-1];
+    for(int i=1;i<src->row;i++){
+        row_pro[i]=integrogram[i][src->col-1]-integrogram[i-1][src->col-1];
+    }
+
+
+    
+    //统计上升和下降段
+    Chain up;
+    Chain down;
+    up.size=0;
+    down.size=0;
+    Node* region;
+    int dir=0;
+    for(int i=1;i<src->row;i++){
+        if( ( (row_pro[i]-row_pro[i-1])*dir )<=0){
+            if(dir>0){
+                region->data[1]=i-1;
+                region->data[2]=row_pro[region->data[1]]-row_pro[region->data[0]];
+                push(&up,region);
+                if(row_pro[i]==row_pro[i-1]){
+                    dir=0;
+                }else{
+                    region=(Node*)malloc(sizeof(Node));
+                    region->data[0]=i-1;
+                    dir=-1;                    
+                }
+            }else if(dir<0){
+                region->data[1]=i-1;
+                region->data[2]=row_pro[region->data[0]]-row_pro[region->data[1]];
+                push(&down,region);
+                if(row_pro[i]==row_pro[i-1]){
+                    dir=0;
+                }else{
+                    region=(Node*)malloc(sizeof(Node));
+                    region->data[0]=i-1;
+                    dir=1;                    
+                }                     
+            }else if(dir==0){
+                if(row_pro[i]>row_pro[i-1]){
+                    region=(Node*)malloc(sizeof(Node));
+                    region->data[0]=i-1;
+                    dir=1;
+                }else if(row_pro[i]<row_pro[i-1]){
+                    region=(Node*)malloc(sizeof(Node));
+                    region->data[0]=i-1;
+                    dir=-1;
+                }
+            }
+        }
+    }
+
+    //冒泡排序
+    sort(&up,2,false);
+    sort(&down,2,false);
+
+
+
+    int l1=0,l2=0;
+    int index=0;
+    while(abs( l2-l1-20 )>5){
+        l1=(at(&up,index)->data[1]+at(&up,index)->data[0])/2;
+        l2=(at(&down,index)->data[1]+at(&down,index)->data[0])/2;
+        index++;  
+    }
+
+    //列投影
+    col_pro[0]=integrogram[l2][0]-integrogram[l1-1][0];
+    for(int j=1;j<src->col;j++){
+        col_pro[j]=integrogram[l2][j]-
+                    integrogram[l1-1][j]-
+                    integrogram[l2][j-1]+
+                    integrogram[l1-1][j-1];
+    }   
+
+    //筛选文本区域,筛选条件：
+    //1.字符宽度在10+-2之间
+    //2.字符之间间距<7
+    //3.字符域内最大高度>5
+    Chain regions;
+    regions.size=0;
+    region=(Node*)malloc(sizeof(Node));
+    region->data[0]=0;
+    int max=0;
+    for(int i=1;i<src->col-1;i++){
+        if(col_pro[i]==0){
+            if(col_pro[i-1]!=0){
+                region->data[1]=i;
+                region->data[2]=max;
+                if(abs(region->data[1]-region->data[0]-10)<3 && max>5){
+                    push(&regions,region);
+                }else{
+                    free(region);
+                }
+                max=0;                
+            }
+            if(col_pro[i+1]!=0){
+                region=(Node*)malloc(sizeof(Node));
+                region->data[0]=i;
+            }
+        }else{
+            if(col_pro[i]>max){
+                max=col_pro[i];
+            }
+        }
+    }
+
+
+
+    int wordNum=0;
+    index=0;
+    for(int i=0;i<regions.size-1;i++){
+        if(at(&regions,i+1)->data[0]-at(&regions,i)->data[1]>7){
+            if(wordNum>8){
+                break;
+            }else{
+                index=i+1;
+            }
+        }else{
+            wordNum+=1;
+        }
+    }
+
+    //字符拓展，虽然找到了字符区域，但是并不完整。需要向外拓展，如果有必要要向内收缩。
+    //方法：检测每一行黑色点的数目，如果大于5个，添加这一行。如果这一行全部为空白，减少这一行。
+    //同时发现行数过少，说明这是一个星形符号，删除这个符号。之后通过识别出来的数字位数来判定是不是要添加星形符号。
+    
+    Node* rect;//data的0,1,2,3表示x,y,width,height
+    int num;
+    for(int i=0;i<=wordNum;i++){
+        rect=(Node*)malloc(sizeof(Node));
+        rect->data[0]=at(&regions,index+i)->data[0]-1;
+        rect->data[1]=l1-1;
+        rect->data[2]=at(&regions,index+i)->data[1]-at(&regions,index+i)->data[0]+2;
+        rect->data[3]=l2-l1+2;
+        //上
+        dir=0;//0方向不定，1拓展，-1收缩
+        while(1){
+            num=0;
+            for(int j=0;j<rect->data[2];j++){
+                if(src->pImg[rect->data[1]][rect->data[0]+j]<100){
+                    num+=1;
+                }
+            }
+            if(dir==0){
+                if(num==0 ){
+                    rect->data[1]+=1;
+                    rect->data[3]-=1;
+                    dir=-1;
+                }else if(dir>3){
+                    rect->data[1]-=1;
+                    rect->data[3]+=1;
+                    dir=1;
+                }else{
+                    break;
+                }       
+            }else if(dir==-1){
+                if(num==0){
+                    rect->data[1]+=1;
+                    rect->data[3]-=1;              
+                }else{
+                    break;
+                }
+            }else if(dir==1){
+                if(num>3){
+                    rect->data[1]-=1;
+                    rect->data[3]+=1;                  
+                }else{
+                    rect->data[1]+=1;
+                    rect->data[3]-=1;         
+                    break;                
+                }
+            }
+
+        }
+
+        //下
+        dir=0;//0方向不定，1拓展，-1收缩
+        while(1){
+            num=0;
+            for(int j=0;j<rect->data[2];j++){
+                if(src->pImg[rect->data[1]+rect->data[3]][rect->data[0]+j]<100){
+                    num+=1;
+                }
+            }
+            if(dir==0){
+                if(num==0 ){
+                    rect->data[3]-=1;
+                    dir=-1;
+                }else if(num>3){
+                    rect->data[3]+=1;
+                    dir=1;
+                }else{
+                    break;
+                }               
+            }else if(dir==-1){
+                if(num==0){
+                    rect->data[3]-=1;              
+                }else{
+                    break;
+                }
+            }else if(dir==1){
+                if(num>3){
+                    rect->data[3]+=1;                  
+                }else{
+                    rect->data[3]-=1;         
+                    break;                
+                }
+            }
+
+        }
+
+        //左
+        dir=0;//0方向不定，1拓展，-1收缩
+        while(1){
+            num=0;
+            for(int j=0;j<rect->data[3];j++){
+                if(src->pImg[rect->data[1]+j][rect->data[0]]<100){
+                    num+=1;
+                }
+            }
+            if(dir==0){
+                if(num==0 ){
+                    rect->data[0]+=1;
+                    rect->data[2]-=1;
+                    dir=-1;
+                }else if(num>3){
+                    rect->data[0]-=1;
+                    rect->data[2]+=1;
+                    dir=1;
+                }else{
+                    break;
+                }               
+            }else if(dir==-1){
+                if(num==0){
+                    rect->data[0]+=1;
+                    rect->data[2]-=1;              
+                }else{
+                    break;
+                }
+            }else if(dir==1){
+                if(num>3){
+                    rect->data[0]-=1;
+                    rect->data[2]+=1;                  
+                }else{
+                    rect->data[0]+=1;
+                    rect->data[2]-=1;         
+                    break;                
+                }
+            }
+
+        }
+
+        //右
+        dir=0;//0方向不定，1拓展，-1收缩
+        while(1){
+            num=0;
+            for(int j=0;j<rect->data[3];j++){
+                if(src->pImg[rect->data[1]+j][rect->data[0]+rect->data[2]]<100){
+                    num+=1;
+                }
+            }
+            if(dir==0){
+                if(num==0 ){
+                    rect->data[2]-=1;
+                    dir=-1;
+                }else if(num>3){
+                    rect->data[2]+=1;
+                    dir=1;
+                }else{
+                    break;
+                }               
+            }else if(dir==-1){
+                if(num==0){
+                    rect->data[2]-=1;              
+                }else{
+                    break;
+                }
+            }else if(dir==1){
+                if(num>3){
+                    rect->data[2]+=1;                  
+                }else{
+                    rect->data[2]-=1;         
+                    break;                
+                }
+            }
+
+        }
+        rect->data[2]+=1;
+        rect->data[3]+=1;
+
+        if(rect->data[3]<15){
+            continue;
+        }
+        push(retVal,rect);
+
+    }
+    // writeChain("/home/sgdd/Internship/Data/mat.txt",retVal);
+
+    //数字和字母一起识别可行性不高，建议将数字和字母分开。
+    //0表示字母，1表示数字，2表示特殊符号
+    kind=(int*)malloc(sizeof(int)*retVal->size);
+    memset(kind,-1,sizeof(int)*retVal->size);
+    int x=0;
+    if(at(&regions,index+1)->data[0]-at(&regions,index)->data[1]>
+        at(&regions,index+2)->data[0]-at(&regions,index+1)->data[1]){
+        kind[0]=0;
+        x=1;
+    }else{
+        kind[0]=0;
+        kind[1]=0;
+        x=2;
+    }
+    for(int i=0;i<8;i++){
+        kind[x+i]=1;
+    }
+    if(kind[retVal->size-1]==-1){
+        kind[retVal->size-1]=0;
+    }else{
+        kind[retVal->size-1]=2;
+    }
+
+}
+
+void densityFeature(const IMG* img, Node* rect,float* feature){
+    int row=rect->data[3];
+    int col=rect->data[2];
+    int colIndex[2];
+    int rowIndex[3];
+    int colStep=col/3;
+    int rowStep=row/4;
+
+    //确定列分割位点
+    int remainder=col%3;
+    switch(remainder){
+        case 0:
+            colIndex[0]=colStep-1;
+            colIndex[1]=colIndex[0]+colStep;
+            break;
+        case 1:
+            colIndex[0]=colStep-1;
+            colIndex[1]=colIndex[0]+colStep;  
+            break;    
+        case 2:
+            colIndex[0]=colStep;
+            colIndex[1]=colIndex[0]+colStep;  
+            break;         
+    }
+
+    //确定行分割位点
+    remainder=row%4;
+    switch(remainder){
+        case 0:
+            rowIndex[0]=rowStep-1;
+            rowIndex[1]=rowIndex[0]+rowStep;
+            rowIndex[2]=rowIndex[1]+rowStep;      
+            break;
+        case 1:
+            rowIndex[0]=rowStep-1;
+            rowIndex[1]=rowIndex[0]+rowStep;
+            rowIndex[2]=rowIndex[1]+rowStep;     
+            break;    
+        case 2:
+            rowIndex[0]=rowStep;
+            rowIndex[1]=rowIndex[0]+rowStep;
+            rowIndex[2]=rowIndex[1]+rowStep;      
+            break;         
+        case 3:  
+            rowIndex[0]=rowStep;
+            rowIndex[1]=rowIndex[0]+rowStep;
+            rowIndex[2]=rowIndex[1]+rowStep;    
+            break;          
+    }    
+
+    //计算12个区域的密度
+    float density;
+    int cols[4];
+    cols[0]=-1;
+    cols[1]=colIndex[0];
+    cols[2]=colIndex[1];
+    cols[3]=col-1;
+
+    int rows[5];
+    rows[0]=-1;
+    rows[1]=rowIndex[0];
+    rows[2]=rowIndex[1];
+    rows[3]=rowIndex[2];
+    rows[4]=row-1;    
+    
+    for(int i=0;i<4;i++){
+        for(int j=0;j<3;j++){
+            density=0;
+            for(int m=rows[i]+1;m<=rows[i+1];m++){
+                for(int n=cols[j]+1;n<=cols[j+1];n++){
+                    if(img->pImg[rect->data[1]+m][rect->data[0]+n]<100){
+                        density+=1;
+                    }
+                }
+            }
+            density=density/( (rows[i+1]-rows[i])*(cols[j+1]-cols[j]) );
+            feature[i*3+j]=density;
+            
+        }
+    }
+
+    //计算横纵各三条线的密度
+    for(int i=0;i<3;i++){
+        density=0;
+        for(int j=0;j<col;j++){
+            if(img->pImg[rect->data[1]+rowIndex[i]][rect->data[0]+j]<100){
+                density+=1;
+            }
+        }
+        density=density/col;
+        feature[12+i]=density;
+    }
+
+    for(int i=0;i<2;i++){
+        density=0;
+        for(int j=0;j<row;j++){
+            if(img->pImg[rect->data[1]+j][rect->data[0]+colIndex[i]]<100){
+                density+=1;
+            }
+        }
+        density=density/row;
+        feature[15+i]=density;
+    }    
+}
+
+void test(const IMG* img,const Chain* rects,const int* kind,char* outcome){
+   //读取每个标签的特征
+
+    float distance[30];
+    float feature[DimNum];
+    for(int i=0;i<rects->size;i++){
+        if(kind[i]==0){     //字母
+            memset(distance,0,sizeof(float)*30);
+            densityFeature(img,at(rects,i),feature);     
+            for(int n=0;n<CharNum;n++){
+                float tmp=0;
+                for(int d=0;d<DimNum;d++){
+                    tmp+=pow(feature[d]-features_char[d][n],2);
+                }
+                distance[n]=sqrt(tmp);          
+            }
+            vector<float>::iterator min=std::min_element(distance.begin(),distance.end());  
+            int pos=std::distance(distance.begin(),min);      
+            outcome[i]=labels_char[pos];
+        }else if(kind[i]==1){   //数字
+            memset(distance,0,sizeof(float)*30);
+            densityFeature(img,at(rects,i),feature);   
+            for(int n=0;n<NumNum;n++){
+                float tmp=0;
+                for(int d=0;d<DimNum;d++){
+                    tmp+=pow(feature[d]-features_num[d][n],2);
+                }
+                distance[n]=sqrt(tmp);          
+            }
+            vector<float>::iterator min=std::min_element(distance.begin(),distance.end());  
+            int pos=std::distance(distance.begin(),min);      
+            outcome[i]=labels_num[pos];
+        }
+
+    }
+    if(imgs.size()<kind.size()){
+        outcome[imgs.size()]='*';
+        outcome[imgs.size()+1]='\0';
+    }else{
+        outcome[imgs.size()]='\0';
+    }
+    
+}

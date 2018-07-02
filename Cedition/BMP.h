@@ -47,6 +47,6 @@ int ReadBmp(const char* szFileName, BITMAPINFOHEADER *bih, U8* Buffer, long *Lin
 int GetDIBColor(int X, int Y, U8 *r, U8 *g, U8 *b,BITMAPINFOHEADER *bih,U8* Buffer,long *LineByteWidth);
 
 //测试函数，演示使用
-int test(void);
+int TestFunction(void);
 
 #endif

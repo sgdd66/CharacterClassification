@@ -95,7 +95,7 @@ void writeTXT(const char* filePath, IMG *img){
 	fclose(file);
 }
  
-int test(void)
+int TestFunction(void)
 {
 	int x, y;
 	U8 r, g, b;
