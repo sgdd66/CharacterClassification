@@ -19,6 +19,10 @@
 #include "Feature.h"
 #include "BMP.h"
 #include "DataStructure.h"
+extern const float features_char[DimNum][CharNum];
+extern const float features_num[DimNum][NumNum];
+extern const char labels_num[NumNum+1];
+extern const char labels_char[CharNum+1];
 
 //arg1是二值化使用的参数，值越大白色区域越大。
 const float arg1=1.4;
@@ -224,7 +228,7 @@ void addRegion(IMG *src,int row,int begin,int end,Chain *regions){
 
 //考虑到横向和纵向切割都需要积分图，所以把两个功能放在一个函数中
 //kind=0表示字母A-Z kind=1表示数字0-9 kind=2表示星形符号
-void split(IMG *src,Chain* retVal,int *kind){
+void split(const IMG *src,Chain* retVal,int *kind){
     retVal->size=0;
     U32** integrogram;
     integrogram=(U32**)malloc(sizeof(U32*)*src->row);
@@ -577,8 +581,6 @@ void split(IMG *src,Chain* retVal,int *kind){
 
     //数字和字母一起识别可行性不高，建议将数字和字母分开。
     //0表示字母，1表示数字，2表示特殊符号
-    kind=(int*)malloc(sizeof(int)*retVal->size);
-    memset(kind,-1,sizeof(int)*retVal->size);
     int x=0;
     if(at(&regions,index+1)->data[0]-at(&regions,index)->data[1]>
         at(&regions,index+2)->data[0]-at(&regions,index+1)->data[1]){
@@ -600,7 +602,7 @@ void split(IMG *src,Chain* retVal,int *kind){
 
 }
 
-void densityFeature(const IMG* img, Node* rect,float* feature){
+void densityFeature(const IMG* img, const Node* rect,float* feature){
     int row=rect->data[3];
     int col=rect->data[2];
     int colIndex[2];
@@ -710,6 +712,8 @@ void test(const IMG* img,const Chain* rects,const int* kind,char* outcome){
 
     float distance[30];
     float feature[DimNum];
+    float min;
+    int pos;
     for(int i=0;i<rects->size;i++){
         if(kind[i]==0){     //字母
             memset(distance,0,sizeof(float)*30);
@@ -721,8 +725,14 @@ void test(const IMG* img,const Chain* rects,const int* kind,char* outcome){
                 }
                 distance[n]=sqrt(tmp);          
             }
-            vector<float>::iterator min=std::min_element(distance.begin(),distance.end());  
-            int pos=std::distance(distance.begin(),min);      
+            min=distance[0];
+            pos=0;
+            for(int n=1;n<CharNum;n++){
+                if(distance[n]<min){
+                    min=distance[n];
+                    pos=n;
+                }   
+            }   
             outcome[i]=labels_char[pos];
         }else if(kind[i]==1){   //数字
             memset(distance,0,sizeof(float)*30);
@@ -734,17 +744,20 @@ void test(const IMG* img,const Chain* rects,const int* kind,char* outcome){
                 }
                 distance[n]=sqrt(tmp);          
             }
-            vector<float>::iterator min=std::min_element(distance.begin(),distance.end());  
-            int pos=std::distance(distance.begin(),min);      
+            min=distance[0];
+            pos=0;
+            for(int n=1;n<NumNum;n++){
+                if(distance[n]<min){
+                    min=distance[n];
+                    pos=n;
+                }   
+            }   
             outcome[i]=labels_num[pos];
+        }else if(kind[i]==2){
+            outcome[i]='*';
         }
 
     }
-    if(imgs.size()<kind.size()){
-        outcome[imgs.size()]='*';
-        outcome[imgs.size()+1]='\0';
-    }else{
-        outcome[imgs.size()]='\0';
-    }
+    outcome[rects->size]='\0';
     
 }

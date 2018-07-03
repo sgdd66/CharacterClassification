@@ -57,7 +57,7 @@ typedef struct Chain{
 void push(Chain *chain,Node *node);
 Node* pop_back(Chain *chain);
 Node* pop_front(Chain *chain);
-Node* at(Chain *chain, int pos);
+Node* at(const Chain *chain, int pos);
 void initIMG(IMG* img,int row,int col);
 void freeIMG(IMG* img);
 //从大到小排序
@@ -65,5 +65,5 @@ void sort(Chain* chain,int index, bool isAsc);
 //只交换数据
 void swap(Node* node1,Node* node2);
 //输出链表
-void writeChain(const char* filePath,Chain* chain);
+void writeChain(const char* filePath,const Chain* chain);
 #endif

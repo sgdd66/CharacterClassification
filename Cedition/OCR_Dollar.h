@@ -29,9 +29,9 @@ void edgeFilter(IMG *img);
 //将begin和end中间的黑色区域找出并存放在regions中，同时将该区域置白
 void addRegion(IMG *src,int row,int begin,int end,Chain *regions);    
 
-void split(IMG *src,Chain* retVal,int *kind);
+void split(const IMG *src,Chain* retVal,int *kind);
 
-void densityFeature(const IMG* img, Node* rect,float* feature);
+void densityFeature(const IMG* img, const Node* rect,float* feature);
 
 
 

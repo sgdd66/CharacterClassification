@@ -64,7 +64,7 @@ Node* pop_front(Chain *chain){
     
 }
 
-Node* at(Chain *chain, int pos){
+Node* at(const Chain *chain, int pos){
     Node* aim=chain->front;
 
     for(int i=0;i<pos;i++){
@@ -108,10 +108,10 @@ void sort(Chain* chain,int index, bool isAsc){
             pos=pos->next;
         }
     }
-    for(int i=0;i<chain->size;i++){
-        printf("%d ",at(chain,i)->data[index]);
-    }
-    printf("\n");
+    // for(int i=0;i<chain->size;i++){
+    //     printf("%d ",at(chain,i)->data[index]);
+    // }
+    // printf("\n");
 
 }
 
@@ -124,7 +124,7 @@ void swap(Node* node1,Node* node2){
     }
 }
 
-void writeChain(const char* filePath,Chain* chain){
+void writeChain(const char* filePath,const Chain* chain){
     FILE *file;
     file=fopen(filePath,"w");
 	char text[30];

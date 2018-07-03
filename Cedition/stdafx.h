@@ -5,6 +5,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 //自定义类型名
 typedef unsigned char   U8;
