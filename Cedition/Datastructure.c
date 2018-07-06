@@ -65,18 +65,21 @@ Node* pop_front(Chain *chain){
 }
 
 Node* at(const Chain *chain, int pos){
+    int i;
     Node* aim=chain->front;
 
-    for(int i=0;i<pos;i++){
+    for(i=0;i<pos;i++){
         aim=aim->next;
     }
     return aim;
 }
+
 void initIMG(IMG* img,int row,int col){
+    int i;
     img->row=row;
     img->col=col;
     img->pImg=(U8**)malloc(sizeof(U8*)*row);
-    for(int i=0;i<row;i++){
+    for(i=0;i<row;i++){
         img->pImg[i]=(U8*)malloc(sizeof(U8)*col);
         memset(img->pImg[i],0,sizeof(U8)*col);
     }
@@ -84,7 +87,8 @@ void initIMG(IMG* img,int row,int col){
 }
 
 void freeIMG(IMG* img){
-    for(int i=0;i<img->row;i++){
+    int i;
+    for(i=0;i<img->row;i++){
         free(img->pImg[i]);
     }
     free(img->pImg);
@@ -92,10 +96,11 @@ void freeIMG(IMG* img){
 
 //从大到小排序
 void sort(Chain* chain,int index, bool isAsc){
+    int i,j;
     Node *pos;
-    for(int i=0;i<chain->size-1;i++){
+    for(i=0;i<chain->size-1;i++){
         pos=chain->front;
-        for(int j=0;j<chain->size-1-i;j++){
+        for(j=0;j<chain->size-1-i;j++){
             if(pos->data[index]>pos->next->data[index]){
                 if(isAsc){
                     swap(pos,pos->next);
@@ -108,7 +113,7 @@ void sort(Chain* chain,int index, bool isAsc){
             pos=pos->next;
         }
     }
-    // for(int i=0;i<chain->size;i++){
+    // for(i=0;i<chain->size;i++){
     //     printf("%d ",at(chain,i)->data[index]);
     // }
     // printf("\n");
@@ -116,8 +121,8 @@ void sort(Chain* chain,int index, bool isAsc){
 }
 
 void swap(Node* node1,Node* node2){
-    int tmp;
-    for(int i=0;i<NodeDim;i++){
+    int tmp,i;
+    for(i=0;i<NodeDim;i++){
         tmp=node1->data[i];
         node1->data[i]=node2->data[i];
         node2->data[i]=tmp;
@@ -126,15 +131,18 @@ void swap(Node* node1,Node* node2){
 
 void writeChain(const char* filePath,const Chain* chain){
     FILE *file;
-    file=fopen(filePath,"w");
 	char text[30];
+    Node* node;
+    int i;
+
+    file=fopen(filePath,"w");
     if(file==NULL){
 		printf("error in opening file:%s",filePath);
 		return;
 	}
-    Node *node=chain->front;
+    node=chain->front;
     while(node!=NULL){
-        for(int i=0;i<NodeDim-1;i++){
+        for(i=0;i<NodeDim-1;i++){
             sprintf(text,"%d\t",node->data[i]);
             fwrite(text,sizeof(char),strlen(text),file);
         }
@@ -143,4 +151,21 @@ void writeChain(const char* filePath,const Chain* chain){
         node=node->next;     
     }
 	fclose(file);
+}
+
+//数据转换
+void transfer(const U8 *buf, int X, int Y, IMG* img){
+    int i,j;
+    img->row=Y;
+    img->col=X;
+    img->pImg=(U8**)malloc(sizeof(U8*)*Y);
+    for(i=0;i<Y;i++){
+        img->pImg[i]=(U8*)malloc(sizeof(U8)*X);
+    }
+    for(i=0;i<Y;i++){
+        for(j=0;j<X;j++){
+            img->pImg[i][j]=buf[j+i*X];
+        }
+        
+    }
 }

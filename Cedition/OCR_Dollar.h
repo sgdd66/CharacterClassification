@@ -21,7 +21,7 @@
 #include "stdafx.h"
 #include "DataStructure.h"
 //使用局部二值化的方法
-void binary(IMG *img);
+void binary(IMG *img,U32 **integrogram);
 
 //将所有与边缘相贴的图案筛选掉
 void edgeFilter(IMG *img);
@@ -29,13 +29,15 @@ void edgeFilter(IMG *img);
 //将begin和end中间的黑色区域找出并存放在regions中，同时将该区域置白
 void addRegion(IMG *src,int row,int begin,int end,Chain *regions);    
 
-void split(const IMG *src,Chain* retVal,int *kind);
+void split(const IMG *src,Chain* retVal,int *kind,U32** integrogram);
 
-void densityFeature(const IMG* img, const Node* rect,float* feature);
+void densityFeature(const IMG* img, const Node* rect,float* feature,U32** integrogram);
 
 
 
-void test(const IMG* img,const Chain* rects,const int* kind,char* outcome);
+void test(const IMG* img,const Chain* rects,const int* kind,char* outcome,U32** integrogram);
+
+void OCR(const U8 *buf, int X, int Y, char* outcome);
 
 
 

@@ -66,4 +66,5 @@ void sort(Chain* chain,int index, bool isAsc);
 void swap(Node* node1,Node* node2);
 //输出链表
 void writeChain(const char* filePath,const Chain* chain);
+void transfer(const U8 *buf, int X, int Y, IMG* img);
 #endif

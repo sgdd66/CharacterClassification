@@ -1,11 +1,16 @@
 PROJECT( main )
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-    #add_compile_options(-std=c++11)
-    set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
-    message(STATUS "optional:-std=c++11")   
-endif(CMAKE_COMPILER_IS_GNUCXX)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pg")
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
+SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
+
+#if(CMAKE_COMPILER_IS_GNUCXX)
+#    #add_compile_options(-std=c++11)
+#    set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+#    message(STATUS "optional:-std=c++11")   
+#endif(CMAKE_COMPILER_IS_GNUCXX)
 
 AUX_SOURCE_DIRECTORY(. DIR_SRCS)
 ADD_EXECUTABLE(mainC ${DIR_SRCS}  )

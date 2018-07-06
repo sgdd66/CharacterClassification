@@ -44,8 +44,8 @@ typedef struct {
     int col;
 } IMG;
 
-#define DimNum  17
-#define CharNum 14
+#define DimNumA  17
+#define CharNumA 14
 #define NumNum  10
 
 #endif

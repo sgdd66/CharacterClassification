@@ -24,6 +24,10 @@ void readBMP(const char* filePath, IMG* img){
 	U16 bfh[7];
 	long dpixeladd,LineByteWidth;
     BITMAPINFOHEADER bih;
+    U8 *Buffer;
+	U8 *ptr;
+	int i,j;
+
 	if (NULL == (file = fopen(filePath, "rb")))
 	{
    		return;
@@ -46,7 +50,7 @@ void readBMP(const char* filePath, IMG* img){
 	if ((LineByteWidth % 4) != 0)
 	    LineByteWidth += 4 - (LineByteWidth % 4);
     
-    U8 *Buffer;
+
 	if ((Buffer = (U8*)malloc(sizeof(U8)* LineByteWidth * bih.biHeight)) != NULL)
 	{
    		fread(Buffer, LineByteWidth * bih.biHeight, 1, file);
@@ -56,15 +60,14 @@ void readBMP(const char* filePath, IMG* img){
     img->col=bih.biWidth;
     img->row=bih.biHeight;
 
-	U8 *ptr;
     img->pImg=(U8**)malloc(sizeof(U8*) * img->row);
-    for(int i=0;i<img->row;i++){
+    for(i=0;i<img->row;i++){
         img->pImg[i]=(U8*)malloc(sizeof(U8) * img->col);
     }
 
     u8 b,g,r;
-    for(int i=0;i<img->row;i++){
-        for(int j=0;j<img->col;j++){
+    for(i=0;i<img->row;i++){
+        for(j=0;j<img->col;j++){
             ptr = Buffer + j * dpixeladd + (img->row-1-i) * LineByteWidth;
             b = *ptr;
             g = *(ptr + 1);
@@ -80,12 +83,13 @@ void writeTXT(const char* filePath, IMG *img){
     FILE *file;
     file=fopen(filePath,"w");
 	char text[10];
+	int i,j;
     if(file==NULL){
 		printf("error in opening file:%s",filePath);
 		return;
 	}
-	for(int i=0;i<img->row;i++){
-		for(int j=0;j<img->col-1;j++){
+	for(i=0;i<img->row;i++){
+		for(j=0;j<img->col-1;j++){
 			sprintf(text,"%d ",img->pImg[i][j]);
 			fwrite(text,sizeof(char),strlen(text),file);
 		}
